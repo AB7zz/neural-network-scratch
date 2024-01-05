@@ -6,7 +6,7 @@ data = pd.read_csv('train.csv')
 
 data = np.array(data)
 m, n = data.shape
-# np.random.shuffle(data)
+np.random.shuffle(data)
 
 data_dev = data[0:1000].T
 Y_dev = data_dev[0]
@@ -29,7 +29,8 @@ def ReLU(Z):
     return np.maximum(0, Z)
 
 def softmax(Z):
-    return np.exp(Z) / np.sum(np.exp(Z))
+    A = np.exp(Z) / np.sum(np.exp(Z))
+    return A
 
 def forward_prop(W1, b1, W2, b2, X):
     Z1 = W1.dot(X) + b1
@@ -50,16 +51,16 @@ def derivReLU(Z):
     return Z > 0
 
 def back_prop(Z1, A1, Z2, A2, W1, W2, X, Y):
-    m = Y.size()
+    m = Y.size
     one_hot_Y = one_hot(Y)
 
     dZ2 = A2 - one_hot_Y
     dW2 = (1 / m) * dZ2.dot(A1.T)
-    db2 = (1 / m) * np.sum(dZ2, 2)
+    db2 = (1 / m) * np.sum(dZ2)
     
     dZ1 = W2.T.dot(dZ2) * derivReLU(Z1)
     dW1 = (1 / m) * dZ1.dot(X.T)
-    db1 = (1 / m) * np.sum(dZ1, 2)
+    db1 = (1 / m) * np.sum(dZ1)
      
     return dW1, db1, dW2, db2
 
@@ -78,10 +79,8 @@ def get_accuracy(predictions, Y):
     print(Y)
     return np.sum(predictions == Y) / Y.size
 
-def get_predictions(W1, b1, W2, b2, X):
-    Z1, A1, Z2, A2 = forward_prop(W1, b1, W2, b2, X)
-    predictions = np.argmax(A2, 0)
-    return predictions
+def get_predictions(A2):
+    return np.argmax(A2, 0)
 
 def gradient_descent(X, Y, iterations, alpha):
     W1, b1, W2, b2 = init_params()
@@ -91,7 +90,28 @@ def gradient_descent(X, Y, iterations, alpha):
         W1, b1, W2, b2 = update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha)
         if i % 10 == 0:
             print("Iteration: ", i)
-            print("Accuracy: ", get_accuracy(get_predictions(W1, b1, W2, b2, X), Y))
+            print("Accuracy: ", get_accuracy(get_predictions(A2), Y))
     return W1, b1, W2, b2
 
 W1, b1, W2, b2 = gradient_descent(X_train, Y_train, 100, 0.1)
+
+
+# def test_prediction(index, W1, b1, W2, b2):
+#     current_image = X_train[:, index, None]
+#     prediction = make_predictions(X_train[:, index, None], W1, b1, W2, b2)
+#     label = Y_train[index]
+#     print("Prediction: ", prediction)
+#     print("Label: ", label)
+
+#     current_image = current_image.reshape((28, 28)) * 255
+#     plt.gray()
+#     plt.imshow(current_image, interpolation='nearest')
+#     plt.show()
+
+# def make_predictions(X, W1, b1, W2, b2):
+#     _, _, _, A2 = forward_prop(W1, b1, W2, b2, X)
+#     predictions = get_predictions(A2)
+#     return predictions
+
+
+# test_prediction(1, W1, b1, W2, b2)
